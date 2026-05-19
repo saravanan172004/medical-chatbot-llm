@@ -11,6 +11,5 @@ sentence-transformers
 pypdf
 langchain-core
 gunicorn
-EOF
 
 
