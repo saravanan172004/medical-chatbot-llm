@@ -1,3 +1,5 @@
+# Open and overwrite requirements.txt completely
+cat > requirements.txt << 'EOF'
 flask
 langchain
 langchain-community
@@ -10,3 +12,9 @@ sentence-transformers
 pypdf
 langchain-core
 gunicorn
+EOF
+
+# Save and push
+git add requirements.txt
+git commit -m "clean requirements no versions no -e"
+git push origin main
