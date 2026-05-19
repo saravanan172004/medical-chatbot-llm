@@ -13,7 +13,4 @@ langchain-core
 gunicorn
 EOF
 
-# Save and push
-git add requirements.txt
-git commit -m "clean requirements no versions no -e"
-git push origin main
+
