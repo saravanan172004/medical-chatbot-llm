@@ -1,5 +1,4 @@
-# Open and overwrite requirements.txt completely
-cat > requirements.txt << 'EOF'
+
 flask
 langchain
 langchain-community
