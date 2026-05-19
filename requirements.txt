@@ -12,4 +12,3 @@ pypdf
 langchain-core
 gunicorn
 
-
