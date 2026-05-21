@@ -2,6 +2,6 @@ services:
   - type: web
     name: medical-chatbot
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn app:app --host=0.0.0.0 --port=8000
     plan: free
