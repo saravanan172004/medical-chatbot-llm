@@ -1,5 +1,5 @@
 from flask import Flask , render_template, jsonify,request
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import create_retrieval_chain
@@ -61,5 +61,6 @@ def chat():
     return str(response["answer"])
 
 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, debug=False)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
