@@ -20,27 +20,34 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
-# Use HuggingFace embeddings (same model used when building the Pinecone index)
-embeddings = download_embeddings()
+# Lazy loading - only initialize on first request
+rag_chain = None
 
-index_name = "medical-chatbot"
+def get_rag_chain():
+    global rag_chain
+    if rag_chain is None:
+        embeddings = download_embeddings()
 
-docsearch = PineconeVectorStore.from_existing_index(
-    embedding=embeddings,
-    index_name=index_name
-)
+        index_name = "medical-chatbot"
 
-retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
-chatModel = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash")
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("human", "{input}")
-    ]
-)
+        docsearch = PineconeVectorStore.from_existing_index(
+            embedding=embeddings,
+            index_name=index_name
+        )
 
-question_answering_chain = create_stuff_documents_chain(chatModel, prompt)
-rag_chain = create_retrieval_chain(retriever, question_answering_chain)
+        retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+        chatModel = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash")
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt),
+                ("human", "{input}")
+            ]
+        )
+
+        question_answering_chain = create_stuff_documents_chain(chatModel, prompt)
+        rag_chain = create_retrieval_chain(retriever, question_answering_chain)
+
+    return rag_chain
 
 
 @app.route("/")
@@ -51,14 +58,13 @@ def index():
 @app.route("/get", methods=["GET", "POST"])
 def chat():
     msg = request.form["msg"]
-    input = msg
-    print(input)
-    response = rag_chain.invoke({"input": msg})
+    print(msg)
+    chain = get_rag_chain()
+    response = chain.invoke({"input": msg})
     print("Response:", response["answer"])
     return str(response["answer"])
 
 
-import os
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
