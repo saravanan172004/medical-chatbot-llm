@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
-from src.helper import load_pdf_files, filter_to_minimal_docs, text_split
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from src.helper import load_pdf_files, filter_to_minimal_docs, text_split, download_embeddings
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 
@@ -18,24 +17,26 @@ extracted_data = load_pdf_files("Data")
 minimal_docs = filter_to_minimal_docs(extracted_data)
 texts_chunk = text_split(minimal_docs)
 
-# Gemini Embeddings (replaces HuggingFace/OpenAI)
-from langchain_community.embeddings import HuggingFaceEmbeddings
+# Google embeddings (768 dimensions)
+embedding = download_embeddings()
 
-embedding = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
 # Pinecone setup
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 index_name = "medical-chatbot"
 
-if not pc.has_index(index_name):
-    pc.create_index(
-        name=index_name,
-        dimension=768,          # Gemini embedding-001 uses 768 dimensions
-        metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region="us-east-1")
-    )
+# Delete and recreate index with correct dimensions
+if pc.has_index(index_name):
+    pc.delete_index(index_name)
+    print("🗑️ Deleted old index")
+
+pc.create_index(
+    name=index_name,
+    dimension=384,  # Google text-embedding-004 uses 768 dimensions
+    metric="cosine",
+    spec=ServerlessSpec(cloud="aws", region="us-east-1")
+)
+print("✅ Created new index")
 
 index = pc.Index(index_name)
 

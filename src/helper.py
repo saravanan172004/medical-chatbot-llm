@@ -1,8 +1,9 @@
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from typing import List
-from langchain.schema import Document
+from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
 
 
 def load_pdf_files(Data):
@@ -38,5 +39,6 @@ def text_split(minimal_docs):
 
 
 def download_embeddings():
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    return embeddings
+    return HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
