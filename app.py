@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from langchain_pinecone import PineconeVectorStore
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -14,10 +14,10 @@ app = Flask(__name__)
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 # Lazy loading - only initialize on first request
 rag_chain = None
@@ -35,7 +35,7 @@ def get_rag_chain():
         )
 
         retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
-        chatModel = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash")
+        chatModel = ChatOpenAI(model="gpt-3.5-turbo")
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system_prompt),
