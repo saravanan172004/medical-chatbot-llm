@@ -1,6 +1,6 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, request
 from langchain_pinecone import PineconeVectorStore
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -14,38 +14,29 @@ app = Flask(__name__)
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 
-# Lazy loading - only initialize on first request
 rag_chain = None
 
 def get_rag_chain():
     global rag_chain
     if rag_chain is None:
         embeddings = download_embeddings()
-
-        index_name = "medical-chatbot"
-
         docsearch = PineconeVectorStore.from_existing_index(
             embedding=embeddings,
-            index_name=index_name
+            index_name="medical-chatbot"
         )
-
         retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
-        chatModel = ChatOpenAI(model="gpt-3.5-turbo")
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt),
-                ("human", "{input}")
-            ]
-        )
-
+        chatModel = ChatGroq(model="llama3-8b-8192")
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("human", "{input}")
+        ])
         question_answering_chain = create_stuff_documents_chain(chatModel, prompt)
         rag_chain = create_retrieval_chain(retriever, question_answering_chain)
-
     return rag_chain
 
 
