@@ -30,7 +30,7 @@ def get_rag_chain():
             index_name="medical-chatbot"
         )
         retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
-        chatModel = ChatGroq(model="llama3-8b-8192")
+        chatModel = ChatGroq(model="llama-3.1-8b-instant")
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
             ("human", "{input}")
